@@ -1,0 +1,20 @@
+# IDE files
+.vscode
+.DS_Store
+.idea
+
+# Dependencies
+vendor
+
+# Test
+*.out
+
+# Misc
+build/
+tmp/
+
+# Secret
+.env
+
+# Build file
+.air.toml

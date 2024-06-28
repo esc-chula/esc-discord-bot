@@ -1,0 +1,11 @@
+bot:
+  Version: 1.0.0
+  Token: ${BOT_TOKEN}
+  WelcomeChannelId: 1253549450572464161
+
+webhook:
+  Port: 8080
+  Secret: ${WEBHOOK_SECRET}
+  NocoDBAPIEndpoint: https://db.intania.org
+  NocoDBAPIToken: ${WEBHOOK_NOCODB_API_TOKEN}
+  NocoDBTableId: mvebeyjhybraixo
