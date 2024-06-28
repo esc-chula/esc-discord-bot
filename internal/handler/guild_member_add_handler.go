@@ -32,7 +32,7 @@ func (h *guildMemberHandler) Add(s *discordgo.Session, m *discordgo.GuildMemberA
 		log.Printf("User: %v, Error sending message: %v", user.ID, err)
 	}
 
-	_, err = s.ChannelMessageSend(cfg.Bot.WelcomeChannelId, fmt.Sprintf("ยินดีต้อนรับ %s สู่ดิสคอร์ด ESC67 🎉\nสามารถขอรับ Role ผ่านทาง DM ที่บอทส่งให้ได้เลย \nอย่าลืมเปลี่ยนชื่อตัวเองเป็นชื่อเล่นด้วยหละ!", user.Mention()))
+	_, err = s.ChannelMessageSend(cfg.Bot.WelcomeChannelId, fmt.Sprintf("**ยินดีต้อนรับ %s สู่ดิสคอร์ด ESC67 🎉**\nสามารถขอรับ Role ผ่านทาง DM ที่บอทส่งให้ได้เลย \nอย่าลืมเปลี่ยนชื่อตัวเองเป็นชื่อเล่นด้วยหละ!", user.Mention()))
 	if err != nil {
 		log.Printf("User: %v, Error sending message: %v", user.ID, err)
 	}

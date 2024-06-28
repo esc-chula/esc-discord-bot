@@ -34,8 +34,8 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 
 			usersData := instance.GetUsersInstance()
 			for _, user := range usersData {
-				if user["StudentId"] == m.Content {
-					_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("คุณคือ \n\n👤 **%v** \n\n✅  หากข้อมูลถูกต้องให้พิมพ์ `confirm` \n❌  หากข้อมูลผิดให้พิมพ์ `cancel`", user["FullName"]))
+				if user["Student Id"] == m.Content {
+					_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("คุณคือ \n\n👤 **%v** \n\n✅  หากข้อมูลถูกต้องให้พิมพ์ `confirm` \n❌  หากข้อมูลผิดให้พิมพ์ `cancel`", user["Full Name"]))
 					if err != nil {
 						log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
 						return
