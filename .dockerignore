@@ -1,0 +1,16 @@
+.idea
+.vscode
+.golangci.yml
+.dockerignore
+.editorconfig
+.gitignore
+.env._
+Dockerfile
+Makefile
+LICENSE
+\*\*/_.md \*_/_\_test.go
+\*.out
+
+.git/
+.github/
+build/
