@@ -149,7 +149,11 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 
 		// ALREADY CONFIRMED
 		if userData["Bot Status"] == "confirmed" {
-			return
+			_, err = s.ChannelMessageSend(m.ChannelID, "👋  รหัสนิสิตนี้ได้รับ Role แล้ว สามารถกลับไปที่ดิสคอร์ดได้เลย!\nหรือหากติดปัญหาอะไร สามารถติดต่อฝ่าย TECH ได้เลยทันที")
+			if err != nil {
+				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+				return
+			}
 		}
 	} else {
 		// NOT FOUND
