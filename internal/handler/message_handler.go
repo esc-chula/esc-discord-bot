@@ -9,13 +9,17 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/esc-chula/esc-discord-bot/config"
 	"github.com/esc-chula/esc-discord-bot/internal/instance"
+	"github.com/esc-chula/esc-discord-bot/internal/repository"
 )
 
 type messageHandler struct {
+	userRepo *repository.UserRepository
 }
 
-func NewMessageHandler() *messageHandler {
-	return &messageHandler{}
+func NewMessageHandler(userRepo *repository.UserRepository) *messageHandler {
+	return &messageHandler{
+		userRepo: userRepo,
+	}
 }
 
 func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {

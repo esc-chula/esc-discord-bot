@@ -8,14 +8,17 @@ import (
 
 	"github.com/esc-chula/esc-discord-bot/config"
 	"github.com/esc-chula/esc-discord-bot/internal/instance"
-	"github.com/esc-chula/esc-discord-bot/pkg/utils"
+	"github.com/esc-chula/esc-discord-bot/internal/repository"
 )
 
 type webhookHandler struct {
+	userRepo *repository.UserRepository
 }
 
-func NewWebhookHandler() *webhookHandler {
-	return &webhookHandler{}
+func NewWebhookHandler(userRepo *repository.UserRepository) *webhookHandler {
+	return &webhookHandler{
+		userRepo: userRepo,
+	}
 }
 
 type WebhookPayload struct {
@@ -46,7 +49,7 @@ func (h *webhookHandler) Received(w http.ResponseWriter, r *http.Request) {
 
 	log.Print("Webhook received, updating user data...")
 
-	usersData, err := utils.GetUsersData()
+	usersData, err := h.userRepo.GetUsersData()
 	if err != nil {
 		http.Error(w, "Unable to get user data", http.StatusInternalServerError)
 		return

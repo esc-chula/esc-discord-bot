@@ -9,6 +9,7 @@ import (
 	"github.com/esc-chula/esc-discord-bot/config"
 	"github.com/esc-chula/esc-discord-bot/internal/handler"
 	"github.com/esc-chula/esc-discord-bot/internal/instance"
+	"github.com/esc-chula/esc-discord-bot/internal/repository"
 	"github.com/esc-chula/esc-discord-bot/pkg/utils"
 	"github.com/gorilla/mux"
 )
@@ -31,16 +32,18 @@ func main() {
 
 	config.SetInstance(cfg)
 
-	usersData, err := utils.GetUsersData()
+	// HANDLER
+	userRepo := repository.NewUserRepository()
+
+	guildMemberHandler := handler.NewGuildMemberHandler()
+	messageHandler := handler.NewMessageHandler(userRepo)
+	webhookhandler := handler.NewWebhookHandler(userRepo)
+
+	usersData, err := userRepo.GetUsersData()
 	if err != nil {
 		log.Fatalf("GetUsersData: %v", err)
 	}
 	instance.SetUsersInstance(usersData)
-
-	// HANDLER
-	guildMemberHandler := handler.NewGuildMemberHandler()
-	messageHandler := handler.NewMessageHandler()
-	webhookhandler := handler.NewWebhookHandler()
 
 	// BOT
 	dg, err := discordgo.New("Bot " + cfg.Bot.Token)
