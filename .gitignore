@@ -3,18 +3,31 @@
 .DS_Store
 .idea
 
-# Dependencies
-vendor
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 
-# Test
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
 *.out
+
+# Dependency directories
+vendor/
+media
 
 # Misc
 build/
 tmp/
 
-# Secret
-.env
-
-# Build file
-.air.toml
+# Enviroment files
+*.env
+envs/
+main
+.idea
+pgdata
+vendor
