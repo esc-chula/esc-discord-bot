@@ -3,7 +3,7 @@ bot:
   Token: ${BOT_TOKEN}
 
 webhook:
-  Port: 8080
+  Port: ${PORT}
   Secret: ${WEBHOOK_SECRET}
   NocoDBAPIEndpoint: https://db.intania.org
   NocoDBAPIToken: ${WEBHOOK_NOCODB_API_TOKEN}

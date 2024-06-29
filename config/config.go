@@ -21,7 +21,7 @@ type BotConfig struct {
 }
 
 type WebhookConfig struct {
-	Port              string
+	Port              string // env: PORT
 	Secret            string // env: WEBHOOK_SECRET
 	NocoDBAPIEndpoint string
 	NocoDBAPIToken    string // env: WEBHOOK_NOCODB_API_TOKEN
@@ -38,6 +38,10 @@ type DiscordConfig struct {
 }
 
 func overrideWithEnv(c *Config) {
+	if value, exists := os.LookupEnv("PORT"); exists {
+		c.Webhook.Port = value
+	}
+
 	if value, exists := os.LookupEnv("BOT_TOKEN"); exists {
 		c.Bot.Token = value
 	}

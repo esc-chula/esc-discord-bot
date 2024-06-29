@@ -24,7 +24,7 @@ Create a `.env` file in the root directory, example given in [`.env.example`](./
 
 For further configuration, [`config-local.yml`](./config/config-local.yml) is provided.
 
-If webhook is in use, do port forwarding of port `8080` so that NocoDB can trigger the webhook.
+If webhook is in use, do port forwarding so that NocoDB can trigger the webhook.
 
 ### Run the Bot
 
