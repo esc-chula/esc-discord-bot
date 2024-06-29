@@ -8,7 +8,7 @@ This is the official "Engineering Student Committee, Chulalongkorn University" D
 - [x] Webhook syncing users data from NocoDB
 - [x] User authentication via Bot Direct Message
 - [x] Role assignment via Bot Direct Message
-- [ ] Link and PATCH user Discord ID to userss data in NocoDB
+- [x] Link and PATCH user Discord ID to users data in NocoDB
 
 ## Getting Started
 
@@ -30,8 +30,4 @@ If webhook is in use, do port forwarding of port `8080` so that NocoDB can trigg
 
 ```bash
 go run ./cmd/bot/main.go
-
-# or
-
-air # for hot reload: https://github.com/cosmtrek/air
 ```

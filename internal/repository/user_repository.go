@@ -21,6 +21,7 @@ func NewUserRepository() *UserRepository {
 		"Accept":   "application/json",
 		"xc-token": cfg.Webhook.NocoDBAPIToken,
 	})
+	client.SetDefaultContentType("application/json")
 
 	return &UserRepository{
 		client: client,
@@ -28,7 +29,7 @@ func NewUserRepository() *UserRepository {
 }
 
 func (r *UserRepository) GetUsersData() ([]map[string]interface{}, error) {
-	resp, err := r.client.Get("/records")
+	resp, err := r.client.Get("/records?limit=1000")
 	if err != nil {
 		return nil, err
 	}
@@ -61,4 +62,30 @@ func (r *UserRepository) GetUsersData() ([]map[string]interface{}, error) {
 	}
 
 	return usersData, nil
+}
+
+func (r *UserRepository) UpdateUserDiscordId(id interface{}, discordId string) error {
+	payload := map[string]interface{}{
+		"Id":         id,
+		"Discord ID": discordId,
+	}
+
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	resp, err := r.client.Patch("/records", payloadBytes)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	var data map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

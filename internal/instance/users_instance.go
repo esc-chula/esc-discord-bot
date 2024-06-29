@@ -12,7 +12,7 @@ func SetUsersInstance(instance []map[string]interface{}) {
 
 func SetUserDataByStudentId(studentId string, key string, value interface{}) {
 	for _, user := range *usersInstance {
-		if user["Student Id"] == studentId {
+		if user["Student ID"] == studentId {
 			user[key] = value
 		}
 	}

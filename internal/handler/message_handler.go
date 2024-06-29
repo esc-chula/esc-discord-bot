@@ -42,116 +42,134 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 			userData = user
 			break
 		}
-		if user["Student Id"] == m.Content {
+		if user["Student ID"] == m.Content {
 			userData = user
 			break
 		}
 	}
 
-	if userData == nil {
-		_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("❌  **ไม่พบข้อมูลของคุณ**\nกรุณาตรวจสอบว่ากรอก Contact List แล้วหรือยัง (%v)\nหรือติดต่อฝ่าย TECH ได้เลย", cfg.Discord.ContactListForm))
-		if err != nil {
-			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
-			return
-		}
-		return
-	}
+	studentId := m.Content
 
-	if len(m.Content) == 10 && userData["Bot Status"] == "unconfirmed" {
-		studentId := m.Content
+	validStudentId, _ := regexp.MatchString(`^6\d{7}21$`, studentId)
 
-		validStudentId, _ := regexp.MatchString(`^6\d{7}21$`, studentId)
-		if !validStudentId {
-			_, err = s.ChannelMessageSend(m.ChannelID, "❌  รหัสนิสิตไม่ถูกต้อง กรุณากรอกใหม่อีกครั้ง")
+	// TYPED STUDENT ID is FOUND
+	if userData != nil {
+		// CHECKING
+		if userData["Bot Status"] == "unconfirmed" && len(m.Content) == 10 {
+			_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("คุณคือ \n\n👤 **%v** \n\n✅  หากข้อมูลถูกต้องให้พิมพ์ `confirm` \n❌  หากข้อมูลผิดให้พิมพ์ `cancel`", userData["Full Name"]))
 			if err != nil {
 				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
 				return
 			}
-		}
 
-		_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("คุณคือ \n\n👤 **%v** \n\n✅  หากข้อมูลถูกต้องให้พิมพ์ `confirm` \n❌  หากข้อมูลผิดให้พิมพ์ `cancel`", userData["Full Name"]))
-		if err != nil {
-			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+			instance.SetUserDataByStudentId(studentId, "Bot Status", "confirming")
+			instance.SetUserDataByStudentId(studentId, "Discord ID", m.Author.ID)
+
 			return
 		}
 
-		instance.SetUserDataByStudentId(studentId, "Bot Status", "confirming")
-		instance.SetUserDataByStudentId(studentId, "Discord ID", m.Author.ID)
-
-		return
-	}
-
-	if m.Content == "confirm" && userData["Discord ID"] == m.Author.ID && userData["Bot Status"] == "confirming" {
-		instance.SetUserDataByDiscordId(m.Author.ID, "Bot Status", "confirmed")
-
-		_, err = s.ChannelMessageSend(m.ChannelID, "💭  กำลังทำการให้ Role กรุณารอสักครู่...")
-		if err != nil {
-			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
-			return
-		}
-
-		departmentRoles := cfg.Discord.DepartmentRoles[userData["Department"].(string)]
-		yearRole := cfg.Discord.YearRoles[userData["Year"].(string)]
-
-		roles := append(departmentRoles, yearRole)
-
-		for _, role := range roles {
-			err = s.GuildMemberRoleAdd(cfg.Discord.ServerId, m.Author.ID, role)
+		// CONFIRMING
+		if userData["Bot Status"] == "confirming" && userData["Discord ID"] == m.Author.ID && m.Content == "confirm" {
+			_, err = s.ChannelMessageSend(m.ChannelID, "💭  กำลังทำการให้ Role กรุณารอสักครู่...")
 			if err != nil {
-				log.Printf("User: %v, Error adding role: %v", m.Author.ID, err)
+				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
 				return
 			}
-		}
 
-		rolesName := []string{}
-		for _, role := range roles {
-			serverRole, err := s.State.Role(cfg.Discord.ServerId, role)
-			if err != nil {
-				continue
+			roles := cfg.Discord.DepartmentRoles[userData["Department"].(string)]
+
+			if userData["Year"] != nil {
+				yearRole := cfg.Discord.YearRoles[userData["Year"].(string)]
+				roles = append(roles, yearRole)
 			}
-			rolesName = append(rolesName, serverRole.Name)
+
+			for _, role := range roles {
+				err = s.GuildMemberRoleAdd(cfg.Discord.ServerId, m.Author.ID, role)
+				if err != nil {
+					log.Printf("User: %v, Error adding role: %v", m.Author.ID, err)
+					return
+				}
+			}
+
+			rolesName := []string{}
+			for _, role := range roles {
+				serverRole, err := s.State.Role(cfg.Discord.ServerId, role)
+				if err != nil {
+					continue
+				}
+				rolesName = append(rolesName, serverRole.Name)
+			}
+
+			err = h.userRepo.UpdateUserDiscordId(userData["Id"], m.Author.ID)
+			if err != nil {
+				log.Printf("User: %v, Error updating user data: %v", m.Author.ID, err)
+
+				_, err = s.ChannelMessageSend(m.ChannelID, "❌  ไม่สามารถอัพเดทข้อมูลของคุณได้ กรุณาติดต่อฝ่าย TECH")
+				if err != nil {
+					log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+				}
+
+				return
+			}
+
+			_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("✅  คุณได้รับ Role: `%v`\n\nสามารถกลับไปที่ดิสคอร์ด %v ได้เลย!\nหรือหากติดปัญหาอะไรฝ่าย TECH พร้อมให้ความช่วยเหลือคับบ!", strings.Join(rolesName, "`, `"), cfg.Discord.ServerName))
+			if err != nil {
+				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+				return
+			}
+
+			instance.SetUserDataByDiscordId(m.Author.ID, "Bot Status", "confirmed")
+
+			return
 		}
 
-		_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("✅  คุณได้รับ Role: `%v`\n\nสามารถกลับไปที่ดิสคอร์ด %v ได้เลย!\nหรือหากติดปัญหาอะไรฝ่าย TECH พร้อมให้ความช่วยเหลือคับ", strings.Join(rolesName, "`, `"), cfg.Discord.ServerName))
+		// CANCELING
+		if userData["Bot Status"] == "confirming" && userData["Discord ID"] == m.Author.ID && m.Content == "cancel" {
+			instance.SetUserDataByDiscordId(m.Author.ID, "Bot Status", "unconfirmed")
+			instance.SetUserDataByDiscordId(m.Author.ID, "Discord ID", nil)
+
+			_, err = s.ChannelMessageSend(m.ChannelID, "❌  ยกเลิกการยืนยันข้อมูลแล้ว\nสามารถพิมพ์รหัสนิสิตอีกครั้งเพื่อค้นหาและยืนยันการให้ Role")
+			if err != nil {
+				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+				return
+			}
+
+			return
+		}
+
+		// CORRECTING USER CONFIRMATION
+		if userData["Bot Status"] == "confirming" {
+			_, err = s.ChannelMessageSend(m.ChannelID, "กรุณาพิมพ์ `confirm` หรือ `cancel` เพิ่อดำเนินการต่อ")
+			if err != nil {
+				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+				return
+			}
+			return
+		}
+
+		// ALREADY CONFIRMED
+		if userData["Bot Status"] == "confirmed" {
+			return
+		}
+	} else {
+		// NOT FOUND
+		if validStudentId {
+			_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("❌  **ไม่พบข้อมูลของคุณ**\nกรุณาตรวจสอบว่ากรอก Contact List แล้วหรือยัง (%v)\nหรือติดต่อฝ่าย TECH ได้เลย", cfg.Discord.ContactListForm))
+			if err != nil {
+				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+				return
+			}
+
+			return
+		}
+
+		// UNKNOW COMMAND
+		_, err = s.ChannelMessageSend(m.ChannelID, "กรุณาพิมพ์รหัสนิสิตของตัวเองเพื่อรับ Role")
 		if err != nil {
 			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
 			return
 		}
 
-		// TODO: patch usersData to NocoDB
-
-		return
-	}
-
-	if m.Content == "cancel" && userData["Discord ID"] == m.Author.ID && userData["Bot Status"] == "confirming" {
-		instance.SetUserDataByDiscordId(m.Author.ID, "Bot Status", "unconfirmed")
-		instance.SetUserDataByDiscordId(m.Author.ID, "Discord ID", nil)
-
-		_, err = s.ChannelMessageSend(m.ChannelID, "❌  ยกเลิกการยืนยันข้อมูลแล้ว\nสามารถพิมพ์รหัสนิสิตอีกครั้งเพื่อค้นหาและยืนยันการให้ Role")
-		if err != nil {
-			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
-			return
-		}
-
-		return
-	}
-
-	if userData["Bot Status"] == "confirming" {
-		_, err = s.ChannelMessageSend(m.ChannelID, "กรุณาพิมพ์ `confirm` หรือ `cancel` เพิ่อดำเนินการต่อ")
-		if err != nil {
-			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
-			return
-		}
-		return
-	}
-
-	if userData["Bot Status"] == "confirmed" {
-		return
-	}
-
-	_, err = s.ChannelMessageSend(m.ChannelID, "กรุณาพิมพ์รหัสนิสิตของตัวเองเพื่อรับ Role")
-	if err != nil {
-		log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
 		return
 	}
 }
