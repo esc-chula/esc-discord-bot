@@ -23,7 +23,7 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 
 	cfg := config.GetConfig()
 
-	if m.Author.ID == s.State.User.ID {
+	if m.Author.ID == s.State.User.ID || m.GuildID != "" {
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 	}
 
 	if userData == nil {
-		_, err = s.ChannelMessageSend(m.ChannelID, "❌  **ไม่พบข้อมูลของคุณ**\nกรุณาตรวจสอบว่ากรอก Contact List แล้วหรือยัง (https://intania.link/esc67-contact-list-form)\nหรือติดต่อฝ่าย TECH ได้เลย")
+		_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("❌  **ไม่พบข้อมูลของคุณ**\nกรุณาตรวจสอบว่ากรอก Contact List แล้วหรือยัง (%v)\nหรือติดต่อฝ่าย TECH ได้เลย", cfg.Discord.ContactListForm))
 		if err != nil {
 			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
 			return
@@ -86,7 +86,10 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 			return
 		}
 
-		roles := []string{cfg.Discord.Roles[userData["Department"].(string)]}
+		departmentRoles := cfg.Discord.DepartmentRoles[userData["Department"].(string)]
+		yearRole := cfg.Discord.YearRoles[userData["Year"].(string)]
+
+		roles := append(departmentRoles, yearRole)
 
 		for _, role := range roles {
 			err = s.GuildMemberRoleAdd(cfg.Discord.ServerId, m.Author.ID, role)
@@ -105,7 +108,7 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 			rolesName = append(rolesName, serverRole.Name)
 		}
 
-		_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("✅  คุณได้รับ Role: `%v`\n\nสามารถกลับไปที่ดิสคอร์ด ESC67 ได้เลย!\nหรือหากติดปัญหาอะไรฝ่าย TECH พร้อมให้ความช่วยเหลือคับ", strings.Join(rolesName, "`, `")))
+		_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("✅  คุณได้รับ Role: `%v`\n\nสามารถกลับไปที่ดิสคอร์ด %v ได้เลย!\nหรือหากติดปัญหาอะไรฝ่าย TECH พร้อมให้ความช่วยเหลือคับ", strings.Join(rolesName, "`, `"), cfg.Discord.ServerName))
 		if err != nil {
 			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
 			return

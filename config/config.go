@@ -29,9 +29,12 @@ type WebhookConfig struct {
 }
 
 type DiscordConfig struct {
+	ContactListForm  string
+	ServerName       string
 	ServerId         string
 	WelcomeChannelId string
-	Roles            map[string]string
+	YearRoles        map[string]string
+	DepartmentRoles  map[string][]string
 }
 
 func overrideWithEnv(c *Config) {
