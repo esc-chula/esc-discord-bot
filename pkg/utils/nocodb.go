@@ -40,5 +40,13 @@ func GetUsersData() ([]map[string]interface{}, error) {
 		return nil, err
 	}
 
+	for _, user := range usersData {
+		if user["Discord ID"] != nil {
+			user["Bot Status"] = "confirmed"
+		} else {
+			user["Bot Status"] = "unconfirmed"
+		}
+	}
+
 	return usersData, nil
 }

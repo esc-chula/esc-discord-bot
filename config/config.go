@@ -12,12 +12,12 @@ import (
 type Config struct {
 	Bot     BotConfig
 	Webhook WebhookConfig
+	Discord DiscordConfig
 }
 
 type BotConfig struct {
-	Version          string
-	Token            string // env: BOT_TOKEN
-	WelcomeChannelId string
+	Version string
+	Token   string // env: BOT_TOKEN
 }
 
 type WebhookConfig struct {
@@ -28,10 +28,17 @@ type WebhookConfig struct {
 	NocoDBTableId     string
 }
 
+type DiscordConfig struct {
+	ServerId         string
+	WelcomeChannelId string
+	Role             string
+}
+
 func overrideWithEnv(c *Config) {
 	if value, exists := os.LookupEnv("BOT_TOKEN"); exists {
 		c.Bot.Token = value
 	}
+
 	if value, exists := os.LookupEnv("WEBHOOK_SECRET"); exists {
 		c.Webhook.Secret = value
 	}
