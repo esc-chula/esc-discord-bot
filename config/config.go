@@ -31,7 +31,7 @@ type WebhookConfig struct {
 type DiscordConfig struct {
 	ServerId         string
 	WelcomeChannelId string
-	Role             string
+	Roles            map[string]string
 }
 
 func overrideWithEnv(c *Config) {

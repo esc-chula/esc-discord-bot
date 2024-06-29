@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/esc-chula/esc-discord-bot/config"
 	"github.com/esc-chula/esc-discord-bot/internal/instance"
 )
 
@@ -18,6 +20,8 @@ func NewMessageHandler() *messageHandler {
 
 func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var err error
+
+	cfg := config.GetConfig()
 
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -40,6 +44,15 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 		}
 	}
 
+	if userData == nil {
+		_, err = s.ChannelMessageSend(m.ChannelID, "❌  **ไม่พบข้อมูลของคุณ**\nกรุณาตรวจสอบว่ากรอก Contact List แล้วหรือยัง (https://intania.link/esc67-contact-list-form)\nหรือติดต่อฝ่าย TECH ได้เลย")
+		if err != nil {
+			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+			return
+		}
+		return
+	}
+
 	if len(m.Content) == 10 && userData["Bot Status"] == "unconfirmed" {
 		studentId := m.Content
 
@@ -50,21 +63,6 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
 				return
 			}
-		}
-
-		_, err = s.ChannelMessageSend(m.ChannelID, "🔍 กำลังค้นหาข้อมูล...")
-		if err != nil {
-			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
-			return
-		}
-
-		if userData == nil {
-			_, err = s.ChannelMessageSend(m.ChannelID, "❌  **ไม่พบข้อมูลของคุณ**\nกรุณาตรวจสอบว่ากรอก Contact List แล้วหรือยัง (https://intania.link/esc67-contact-list-form)\nหรือติดต่อฝ่าย TECH ได้เลย")
-			if err != nil {
-				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
-				return
-			}
-			return
 		}
 
 		_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("คุณคือ \n\n👤 **%v** \n\n✅  หากข้อมูลถูกต้องให้พิมพ์ `confirm` \n❌  หากข้อมูลผิดให้พิมพ์ `cancel`", userData["Full Name"]))
@@ -88,7 +86,31 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 			return
 		}
 
-		// TODO: give role to user
+		roles := []string{cfg.Discord.Roles[userData["Department"].(string)]}
+
+		for _, role := range roles {
+			err = s.GuildMemberRoleAdd(cfg.Discord.ServerId, m.Author.ID, role)
+			if err != nil {
+				log.Printf("User: %v, Error adding role: %v", m.Author.ID, err)
+				return
+			}
+		}
+
+		rolesName := []string{}
+		for _, role := range roles {
+			serverRole, err := s.State.Role(cfg.Discord.ServerId, role)
+			if err != nil {
+				continue
+			}
+			rolesName = append(rolesName, serverRole.Name)
+		}
+
+		_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("✅  คุณได้รับ Role: `%v`\n\nสามารถกลับไปที่ดิสคอร์ด ESC67 ได้เลย!\nหรือหากติดปัญหาอะไรฝ่าย TECH พร้อมให้ความช่วยเหลือคับ", strings.Join(rolesName, "`, `")))
+		if err != nil {
+			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
+			return
+		}
+
 		// TODO: patch usersData to NocoDB
 
 		return
@@ -115,12 +137,8 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 		}
 		return
 	}
+
 	if userData["Bot Status"] == "confirmed" {
-		_, err = s.ChannelMessageSend(m.ChannelID, "✅  คุณได้รับ Role แล้ว")
-		if err != nil {
-			log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
-			return
-		}
 		return
 	}
 

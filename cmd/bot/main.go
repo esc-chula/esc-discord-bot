@@ -52,7 +52,7 @@ func main() {
 	dg.AddHandler(guildMemberHandler.Add)
 	dg.AddHandler(messageHandler.MessageCreate)
 
-	dg.Identify.Intents = discordgo.IntentsGuildMembers | discordgo.IntentsGuildMessages | discordgo.IntentsDirectMessages
+	dg.Identify.Intents = discordgo.IntentsAll
 
 	// WEBHOOK SERVER
 	router := mux.NewRouter()
