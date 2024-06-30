@@ -32,3 +32,18 @@ If webhook is in use, do port forwarding so that NocoDB can trigger the webhook.
 ```bash
 go run ./cmd/bot/main.go
 ```
+
+## Docker
+
+### Build
+
+```bash
+docker build . -t esc-discord-bot
+
+```
+
+### Run
+
+```bash
+docker run --env-file .env --name esc-discord-bot -p 8080:8080 esc-discord-bot
+```
