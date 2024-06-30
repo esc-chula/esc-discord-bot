@@ -112,6 +112,11 @@ func (h *messageHandler) MessageCreate(s *discordgo.Session, m *discordgo.Messag
 				return
 			}
 
+			err = s.GuildMemberNickname(cfg.Discord.ServerId, m.Author.ID, userData["Nickname EN"].(string))
+			if err != nil {
+				log.Printf("User: %v, Error changing nickname: %v", m.Author.ID, err)
+			}
+
 			_, err = s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("✅  คุณได้รับ Role: `%v`\n\nสามารถกลับไปที่ดิสคอร์ด %v ได้เลย!\nหรือหากติดปัญหาอะไรฝ่าย TECH พร้อมให้ความช่วยเหลือคับบ!", strings.Join(rolesName, "`, `"), cfg.Discord.ServerName))
 			if err != nil {
 				log.Printf("User: %v, Error sending message: %v", m.Author.ID, err)
