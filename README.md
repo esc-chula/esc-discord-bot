@@ -6,8 +6,9 @@ This is the official "Engineering Student Committee, Chulalongkorn University" D
 
 - [x] Welcome message
 - [x] Webhook syncing users data from NocoDB
-- [x] User authentication via Bot Direct Message
-- [x] Role assignment via Bot Direct Message
+- [x] User authentication via Bot DM
+- [x] Role assignment via Bot DM
+- [x] Nickname change via Bot DM
 - [x] Link and PATCH user Discord ID to users data in NocoDB
 
 ## Getting Started
